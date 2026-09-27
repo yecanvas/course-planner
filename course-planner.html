@@ -3353,6 +3353,9 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
       case 'install-help':
         showInstallHelp();
         break;
+      case 'diag-install':
+        runInstallDiagnosis();
+        break;
       case 'import': {
         var fi = qs('#importFile');
         if (fi) { fi.click(); }
@@ -3600,27 +3603,204 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
     h += '<div class="modal-foot"><button type="button" class="btn primary" data-act="close-modal">知道了</button></div>';
     openModal(h);
   }
+  /* 识别当前是哪个手机系统 / 浏览器 —— 安装方式完全取决于这个 */
+  function uaInfo() {
+    var ua = (navigator.userAgent || '') + '';
+    var ios = isIOSDevice();
+    var android = /Android/i.test(ua);
+    return {
+      ua: ua, ios: ios, android: android,
+      wechat: /MicroMessenger/i.test(ua),
+      qq: /(QQBrowser|\bQQ\/)/i.test(ua),
+      uc: /(UCBrowser|UBrowser|UCWEB)/i.test(ua),
+      quark: /Quark/i.test(ua),
+      chromeIOS: /CriOS/i.test(ua),
+      edgeIOS: /EdgiOS/i.test(ua),
+      firefoxIOS: /FxiOS/i.test(ua),
+      samsung: /SamsungBrowser/i.test(ua),
+      edgeAndroid: /EdgA/i.test(ua),
+      chrome: /Chrome\//i.test(ua) && !/(Edg|OPR|CriOS|EdgiOS)/i.test(ua),
+      safari: /Safari/i.test(ua) && !/(Chrome|CriOS|FxiOS|EdgiOS|Android|OPR)/i.test(ua),
+    };
+  }
+  function browserName(u) {
+    if (u.wechat) { return '微信内置浏览器'; }
+    if (u.qq) { return 'QQ 浏览器'; }
+    if (u.uc) { return 'UC 浏览器'; }
+    if (u.quark) { return '夸克浏览器'; }
+    if (u.chromeIOS) { return 'iPhone 版 Chrome'; }
+    if (u.edgeIOS) { return 'iPhone 版 Edge'; }
+    if (u.firefoxIOS) { return 'iPhone 版 Firefox'; }
+    if (u.safari) { return 'Safari'; }
+    if (u.samsung) { return '三星浏览器'; }
+    if (u.edgeAndroid) { return '安卓版 Edge'; }
+    if (u.chrome) { return 'Chrome'; }
+    if (u.ios) { return 'iPhone 上的某个 App / 浏览器'; }
+    if (u.android) { return '安卓上的某个浏览器'; }
+    return '当前浏览器';
+  }
+
   function installPanelHtml() {
     var h = '<div class="panel">';
     h += '<p class="section-title"><span class="dot"></span>📲 装成 App</p>';
     if (isStandaloneApp()) {
       h += '<div class="hint">✅ 你现在就是<b>以 App 模式</b>在用（没有浏览器地址栏）。数据存在本机，断网也能打开。</div>';
-      h += '</div>';
+      h += '<div class="toolbar" style="margin-top:10px;margin-bottom:0">';
+      h += '<button class="btn" data-act="diag-install">🔍 检查这台设备</button>';
+      h += '</div></div>';
       return h;
     }
     if (!canInstallHere()) {
       h += '<div class="hint">你现在是<b>直接打开本地文件</b>，浏览器不允许把本地文件装成 App。<br /><br />';
       h += '想装成 App，只要一步：把这个工具<b>发布到一个网址</b>上（免费，几分钟，见 README「三、装成 App」），';
       h += '然后用<b>手机</b>打开那个网址 → 添加到主屏幕。之后点图标即开、全屏无地址栏、断网也能用。';
+      h += '</div>';
+      h += '<div class="toolbar" style="margin-top:10px;margin-bottom:0">';
+      h += '<button class="btn" data-act="diag-install">🔍 检查这台设备</button>';
       h += '</div></div>';
       return h;
     }
     h += '<div class="hint">装成 App 之后：桌面有独立图标、打开就是全屏（没有地址栏）、<b>断网也能用</b>，和原生 App 一样。</div>';
     h += '<div class="toolbar" style="margin-top:10px;margin-bottom:0">';
     h += '<button class="btn primary" data-act="install-app">📲 安装到这台设备</button>';
-    h += '<button class="btn" data-act="install-help">手动安装的方法</button>';
+    h += '<button class="btn" data-act="diag-install">🔍 装不上？点这里自检</button>';
     h += '</div></div>';
     return h;
+  }
+
+  /* 让工具在用户自己的手机上跑一遍检查，直接告诉他卡在哪 */
+  function runInstallDiagnosis() {
+    var u = uaInfo();
+    var rows = [];
+    function add(ord, s, t, a) { rows.push({ ord: ord, s: s, t: t, a: a || '' }); }
+    var isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+    add(1, 'info', '系统 / 浏览器：' + (u.ios ? 'iPhone / iPad' : (u.android ? '安卓' : '电脑')) + ' · ' + browserName(u), '');
+
+    if (isStandaloneApp()) {
+      add(2, 'ok', '已经是以 App 模式在运行了', '不用再装。如果桌面没图标，去手机的「应用列表 / 资源库」翻翻。');
+    } else {
+      add(2, 'warn', '不是 App 模式（还在浏览器里）', '说明还没装成功，或者打开的方式不对。');
+    }
+
+    if (location.protocol === 'https:' || isLocalhost) {
+      add(3, 'ok', '网址是安全上下文（安装的必要条件）', '');
+    } else {
+      add(3, 'bad', '网址不是 https，而是 ' + location.protocol, '必须从 https 网址打开才能装成 App。');
+    }
+
+    if (u.wechat) {
+      add(4, 'bad', '你现在是在微信里打开的', '微信没有安装功能，装不了。点右上角「…」→「用浏览器打开」，再按下面的办法做。');
+    } else if (u.ios && !u.safari) {
+      add(4, 'bad', 'iPhone 上用「' + browserName(u) + '」没有安装入口', 'iPhone 上只有 Safari 能「添加到主屏幕」。复制网址 → 打开 Safari → 重新访问。');
+    } else if (u.ios && u.safari) {
+      add(4, 'ok', 'iPhone + Safari，正确的组合', '用底部中间的分享按钮 → 添加到主屏幕。');
+    } else if (u.android) {
+      add(4, 'ok', '安卓系统', '用浏览器的 ⋮ 菜单找「安装应用」或「添加到主屏幕」。');
+    } else {
+      add(4, 'ok', '电脑浏览器', '点地址栏右边的安装图标，或 ⋮ 菜单里的「安装」。');
+    }
+
+    if (installPrompt) {
+      add(5, 'ok', '浏览器已允许安装（捕获到安装事件）', '可以回上一页点「📲 安装到这台设备」按钮。');
+    } else if (!u.ios) {
+      add(5, 'warn', '还没收到浏览器的安装许可', '常见原因：页面刚改过还没重新加载。先刷新页面再试。');
+    }
+
+    /* --- 以下要联网检查；本地文件方式下没意义，直接跳过 --- */
+    var jobs = [];
+    if (!canInstallHere()) {
+      add(5, 'info', '本地文件方式打开，跳过联网检查', '这种方式浏览器不允许安装。先去发布到一个 https 网址（见 README 第三节）。');
+      openModal('<h3>安装自检</h3><p class="sub">正在检查…</p>', true);
+      Promise.all(jobs).then(function () {
+        rows.sort(function (a, b) { return a.ord - b.ord; });
+        var h = '<h3>安装自检</h3><p class="sub">' + esc(browserName(u)) + '，本地文件方式</p>';
+        h += '<div class="list">';
+        for (var i = 0; i < rows.length; i++) {
+          var r = rows[i];
+          var mark = r.s === 'ok' ? '✅' : (r.s === 'warn' ? '⚠️' : (r.s === 'bad' ? '❌' : 'ℹ️'));
+          h += '<div class="item"><div class="grow"><div class="t1">' + mark + ' ' + esc(r.t) + '</div>' +
+               (r.a ? '<div class="t2">' + esc(r.a) + '</div>' : '') + '</div></div>';
+        }
+        h += '</div><div class="modal-foot"><button type="button" class="btn primary" data-act="close-modal">知道了</button></div>';
+        openModal(h, true);
+      });
+      return;
+    }
+    var mlink = qs('link[rel=manifest]');
+    if (!mlink) {
+      add('bad', '页面里没有 manifest 链接', '这个页面可能是旧版本，请从正式网址重新打开。');
+    } else {
+      jobs.push(fetch(mlink.href).then(function (r) {
+        if (!r.ok) { throw new Error('HTTP ' + r.status); }
+        var ct = (r.headers.get('content-type') || '');
+        add(6, 'ok', 'manifest 能下载（' + (ct.split(';')[0] || '未知类型') + '）', '');
+        return r.json();
+      }).then(function (j) {
+        add(7, 'ok', 'manifest 内容正常：' + j.name + '，显示模式 ' + j.display + '，' + (j.icons || []).length + ' 个图标', '');
+        var has192 = (j.icons || []).some(function (i) { return String(i.sizes).indexOf('192') >= 0; });
+        var has512 = (j.icons || []).some(function (i) { return String(i.sizes).indexOf('512') >= 0; });
+        if (!has192 || !has512) { add(7, 'bad', '图标尺寸不全（需要 192 和 512）', '重新上传完整的发布包。'); }
+        return Promise.all((j.icons || []).map(function (i) {
+          var url = i.src;
+          return fetch(url, { method: 'GET' }).then(function (r) {
+            if (!r.ok) { add(8, 'bad', '图标取不到：' + url + '（HTTP ' + r.status + '）', '这个文件没传上去，重新上传发布包。'); }
+            return null;
+          }).catch(function () {
+            add(8, 'bad', '图标取不到：' + url, '这个文件没上传成功。');
+          });
+        }));
+      }).catch(function (e) {
+        add(6, 'bad', 'manifest 打不开：' + (e && e.message ? e.message : e), '多半是文件没上传成功，或文件名对不上。');
+      }));
+    }
+
+    jobs.push(fetch('sw.js', { method: 'GET' }).then(function (r) {
+      if (r.ok) { add(9, 'ok', 'Service Worker 文件在（离线可用的前提）', ''); }
+      else { add(9, 'bad', 'sw.js 取不到（HTTP ' + r.status + '）', '这个文件没传上去，浏览器就不会认为它是可安装的应用。'); }
+    }).catch(function () { add(9, 'bad', 'sw.js 取不到', '网络问题，或文件没上传。'); }));
+
+    if (typeof navigator !== 'undefined' && navigator.serviceWorker) {
+      jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) {
+        var active = rs.some(function (r) { return r.active; });
+        if (active) { add(10, 'ok', 'Service Worker 已注册并生效', ''); }
+        else { add(10, 'warn', 'Service Worker 还没生效', '刷新一次页面通常就好了。'); }
+      }).catch(function () {
+        add(10, 'warn', '无法查询 Service Worker 状态', '');
+      }));
+    } else {
+      add(10, 'warn', '这个浏览器不支持 Service Worker', '');
+    }
+
+    openModal('<h3>安装自检</h3><p class="sub">正在检查…</p>', true);
+
+    Promise.all(jobs).then(function () {
+      rows.sort(function (a, b) { return a.ord - b.ord; });
+      var badCount = rows.filter(function (r) { return r.s === 'bad'; }).length;
+      var head;
+      if (badCount) { head = '发现 ' + badCount + ' 个问题，看下面标 ❌ 的行。'; }
+      else if (isStandaloneApp()) { head = '一切正常，你已经装好了。'; }
+      else { head = '硬件条件都满足，按提示操作就能装上。'; }
+
+      var h = '<h3>安装自检</h3><p class="sub">' + esc(head) + '</p>';
+      h += '<div class="list">';
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        var mark = r.s === 'ok' ? '✅' : (r.s === 'warn' ? '⚠️' : (r.s === 'bad' ? '❌' : 'ℹ️'));
+        h += '<div class="item"><div class="grow">';
+        h += '<div class="t1">' + mark + ' ' + esc(r.t) + '</div>';
+        if (r.a) { h += '<div class="t2">' + esc(r.a) + '</div>'; }
+        h += '</div></div>';
+      }
+      h += '</div>';
+      h += '<div class="modal-foot">';
+      if (badCount === 0 && !isStandaloneApp()) {
+        h += '<button type="button" class="btn" data-act="install-help">看安装步骤</button>';
+      }
+      h += '<button type="button" class="btn primary" data-act="close-modal">知道了</button>';
+      h += '</div>';
+      openModal(h, true);
+    });
   }
 
   /* =======================================================
