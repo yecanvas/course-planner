@@ -246,6 +246,39 @@ table.times th,table.times td{padding:5px 6px; border-bottom:1px solid var(--lin
 table.times th{font-size:calc(12px * var(--fz)); color:var(--muted); font-weight:600;}
 table.times input[type=time]{padding:4px 8px; width:120px;}
 
+/* ---------- 点按动态效果 ---------- */
+/* 涟漪画在独立的固定层里，这样即使按钮点完就被重新渲染掉，动画也不会中断 */
+#rippleLayer{position:fixed; inset:0; pointer-events:none; z-index:90; overflow:hidden;}
+#rippleLayer .rp{position:fixed; overflow:hidden; pointer-events:none; will-change:opacity;}
+#rippleLayer .rp i{
+  position:absolute; border-radius:50%; display:block;
+  animation:rpGo .5s cubic-bezier(.2,.7,.4,1) forwards;
+}
+@keyframes rpGo{
+  from{transform:scale(.1); opacity:.22;}
+  to{transform:scale(1); opacity:0;}
+}
+/* 按下去时轻微缩小，给手指一个“按到了”的反馈。
+   只给不包含其它按钮的元素加，避免内外两层同时缩小。 */
+.btn,.icon-btn,.chip,.tab,.daychip,.check,.wc,.sw,.course,.dcard,.g-slot,.item,.dayrow{
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .11s cubic-bezier(.2,.8,.3,1), background-color .16s ease,
+             border-color .16s ease, color .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+.btn:active,.icon-btn:active,.chip:active,.tab:active,.daychip:active,
+.check:active,.wc:active,.sw:active{transform:scale(.95);}
+.course:active,.dcard:active,.g-slot:active{transform:scale(.985);}
+/* 切换页面时内容淡入上浮 */
+#main.view-in{animation:viewIn .26s cubic-bezier(.2,.8,.3,1) both;}
+@keyframes viewIn{
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1; transform:none;}
+}
+/* 系统开了“减弱动态效果”就全部关掉 */
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important;}
+}
+
 /* ---------- 弹窗 / toast ---------- */
 .modal-mask{
   position:fixed; inset:0; background:rgba(12,18,28,.5); backdrop-filter:blur(2px);
@@ -459,6 +492,7 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
 
 <main id="main"></main>
 <div id="modalRoot"></div>
+<div id="rippleLayer"></div>
 <div id="toastRoot"></div>
 
 <script>
@@ -608,7 +642,8 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
         focusMin: 25,
         breakMin: 5,
         theme: 'auto',
-        fontScale: 'm'
+        fontScale: 'm',
+        haptics: false
       },
       courses: [],
       tasks: [],
@@ -635,6 +670,7 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
     d.settings.breakMin = clampInt(st.breakMin, 1, 60, 5);
     d.settings.theme = (st.theme === 'light' || st.theme === 'dark') ? st.theme : 'auto';
     d.settings.fontScale = ['s', 'm', 'l', 'xl'].indexOf(st.fontScale) >= 0 ? st.fontScale : 'm';
+    d.settings.haptics = !!st.haptics;
 
     d.courses = (Array.isArray(s.courses) ? s.courses : []).map(function (c) {
       return {
@@ -2700,6 +2736,9 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
          '<option value="l"' + (st.fontScale === 'l' ? ' selected' : '') + '>大</option>' +
          '<option value="xl"' + (st.fontScale === 'xl' ? ' selected' : '') + '>特大</option>' +
          '</select></label>';
+    h += '<label class="fld" style="justify-content:flex-end">' +
+         '<span style="display:flex;align-items:center;gap:8px;font-size:calc(13px * var(--fz));color:var(--text);font-weight:600;padding-bottom:8px">' +
+         '<input type="checkbox" name="haptics"' + (st.haptics ? ' checked' : '') + ' /> 点按震动反馈</span></label>';
     h += '<label class="fld">专注时长（分钟）<input type="number" name="focusMin" min="1" max="180" value="' + st.focusMin + '" /></label>';
     h += '<label class="fld">休息时长（分钟）<input type="number" name="breakMin" min="1" max="60" value="' + st.breakMin + '" /></label>';
     h += '</div>';
@@ -2769,13 +2808,25 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
   /* =======================================================
      渲染入口
      ======================================================= */
+  var lastRenderedTab = null;
+
   function render() {
     applyFontScale();
     var main = qs('#main');
+    var tabChanged = (lastRenderedTab !== state.ui.tab);
     if (state.ui.tab === 'schedule') { main.innerHTML = viewSchedule(); }
     else if (state.ui.tab === 'tasks') { main.innerHTML = viewTasks(); }
     else if (state.ui.tab === 'stats') { main.innerHTML = viewStats(); }
     else { main.innerHTML = viewSettings(); }
+    /* 只在切换页面时播放入场动画；同一个页面内的局部刷新不重复播，否则会很晃 */
+    if (tabChanged && !reducedMotion()) {
+      try {
+        main.classList.remove('view-in');
+        void main.offsetWidth;   /* 强制重排，让动画能重新开始 */
+        main.classList.add('view-in');
+      } catch (e) { /* 忽略 */ }
+    }
+    lastRenderedTab = state.ui.tab;
     paintChrome();
     paintTimer();
   }
@@ -3064,6 +3115,7 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
     state.settings.theme = (th === 'light' || th === 'dark') ? th : 'auto';
     var fs = String(fd.get('fontScale') || 'm');
     state.settings.fontScale = ['s', 'm', 'l', 'xl'].indexOf(fs) >= 0 ? fs : 'm';
+    state.settings.haptics = !!fd.get('haptics');
 
     // 节次被裁掉时把课程时间收进范围内
     for (var ci = 0; ci < state.courses.length; ci++) {
@@ -3568,6 +3620,67 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
   ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) {
     document.addEventListener(ev, function (e) { e.preventDefault(); }, { passive: false });
   });
+
+  /* =======================================================
+     点按动态效果：涟漪 + 震动
+     ======================================================= */
+  var RIPPLE_SEL = '.btn,.icon-btn,.chip,.tab,.daychip,.check,.wc,.sw,.g-slot,.course,.dcard,[data-act]';
+
+  function reducedMotion() {
+    try {
+      return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    } catch (e) { return false; }
+  }
+  function haptic() {
+    if (!state || !state.settings.haptics) { return; }
+    try { if (navigator.vibrate) { navigator.vibrate(8); } } catch (e) { /* 忽略 */ }
+  }
+  /* 涟漪画在固定层里：按钮点完往往马上被重新渲染掉，
+     如果直接塞进按钮内部，动画会跟着一起消失 */
+  function spawnRipple(el, x, y) {
+    var layer = qs('#rippleLayer');
+    if (!layer) { return; }
+    var r = el.getBoundingClientRect();
+    if (!r.width || !r.height) { return; }
+    var col = '#000000', radius = '10px';
+    try {
+      var cs = window.getComputedStyle(el);
+      if (cs) {
+        col = cs.color || col;
+        radius = cs.borderRadius || radius;
+      }
+    } catch (e) { /* 忽略 */ }
+    var size = Math.max(r.width, r.height) * 2;
+    var box = document.createElement('div');
+    box.className = 'rp';
+    box.style.left = r.left + 'px';
+    box.style.top = r.top + 'px';
+    box.style.width = r.width + 'px';
+    box.style.height = r.height + 'px';
+    box.style.borderRadius = radius;
+    var dot = document.createElement('i');
+    dot.style.width = size + 'px';
+    dot.style.height = size + 'px';
+    dot.style.left = (x - r.left - size / 2) + 'px';
+    dot.style.top = (y - r.top - size / 2) + 'px';
+    dot.style.background = col;
+    box.appendChild(dot);
+    layer.appendChild(box);
+    setTimeout(function () {
+      if (box.parentNode) { box.parentNode.removeChild(box); }
+    }, 560);
+  }
+
+  document.addEventListener('pointerdown', function (e) {
+    if (typeof e.button === 'number' && e.button !== 0) { return; }
+    var t = e.target;
+    if (!t || !t.closest) { return; }
+    var el = t.closest(RIPPLE_SEL);
+    if (!el || el.disabled) { return; }
+    haptic();
+    if (reducedMotion()) { return; }
+    spawnRipple(el, e.clientX, e.clientY);
+  }, { passive: true });
 
   window.addEventListener('beforeunload', function () {
     if (timer.handle) { clearInterval(timer.handle); }
