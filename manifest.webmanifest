@@ -1,0 +1,19 @@
+{
+  "name": "课表规划工具",
+  "short_name": "课表",
+  "description": "课表 + 时间规划，一个文件就够。支持教务系统课表一键导入。",
+  "lang": "zh-CN",
+  "start_url": "./course-planner.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#eef2f8",
+  "theme_color": "#3b6df6",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
