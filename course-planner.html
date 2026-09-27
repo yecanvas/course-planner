@@ -2,7 +2,7 @@
 <html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta name="theme-color" content="#3b6df6" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -18,8 +18,17 @@
 :root{
   --bg:#eef2f8; --panel:#ffffff; --panel2:#f4f7fc; --text:#16202e; --muted:#6a7a90;
   --line:#dfe6f1; --accent:#3b6df6; --accent2:#e9f0ff; --danger:#e5484d; --ok:#12a06a; --warn:#d99400;
-  --radius:14px; --gutter:78px; --taxis:54px;
+  --radius:14px; --gutter:78px;
+  /* 字号缩放：所有 font-size 都写成 calc(Npx * var(--fz))，改 --fz 就能整体放大缩小。
+     时间轴宽度和课表行高也要跟着走，否则字变大了格子装不下。 */
+  --fz:1;
+  --taxis:calc(54px * var(--fz));
+  --rowh:calc(46px * var(--fz));
   --shadow:0 1px 2px rgba(16,24,40,.05), 0 10px 30px rgba(16,24,40,.07);
+}
+html[data-fs="s"]{ --fz:.9; }
+html[data-fs="l"]{ --fz:1.15; }
+html[data-fs="xl"]{ --fz:1.3; }
 }
 html[data-theme="dark"]{
   --bg:#0f131a; --panel:#161c26; --panel2:#1c2431; --text:#e7edf6; --muted:#8fa0b8;
@@ -28,8 +37,16 @@ html[data-theme="dark"]{
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
+/* 装成 App 后页面要固定住，不允许双指缩放（配合 viewport 里的 user-scalable=no）。
+   pan-x pan-y 只放行滚动，同时挡掉双指缩放和双击放大。 */
+html{
+  touch-action:pan-x pan-y;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+  overscroll-behavior-y:none;
+}
 body{
-  background:var(--bg); color:var(--text); font-size:14px; line-height:1.55;
+  background:var(--bg); color:var(--text); font-size:calc(14px * var(--fz)); line-height:1.55;
   font-family:"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
   -webkit-font-smoothing:antialiased;
 }
@@ -43,8 +60,8 @@ a{color:var(--accent);}
   padding:10px 18px; background:var(--panel); border-bottom:1px solid var(--line);
   box-shadow:0 1px 0 rgba(0,0,0,.02);
 }
-.brand{display:flex; align-items:center; gap:8px; font-weight:700; font-size:15px; white-space:nowrap;}
-.brand .logo{font-size:18px;}
+.brand{display:flex; align-items:center; gap:8px; font-weight:700; font-size:calc(15px * var(--fz)); white-space:nowrap;}
+.brand .logo{font-size:calc(18px * var(--fz));}
 .tabs{display:flex; gap:4px; flex:1; overflow-x:auto;}
 .tab{
   border:0; background:transparent; color:var(--muted); padding:7px 14px; border-radius:9px;
@@ -54,12 +71,12 @@ a{color:var(--accent);}
 .tab.active{background:var(--accent); color:#fff;}
 .topbar-right{display:flex; align-items:center; gap:8px;}
 .badge{
-  background:var(--accent2); color:var(--accent); font-weight:700; font-size:12.5px;
+  background:var(--accent2); color:var(--accent); font-weight:700; font-size:calc(12.5px * var(--fz));
   padding:5px 11px; border-radius:999px; white-space:nowrap;
 }
 .icon-btn{
   border:1px solid var(--line); background:var(--panel2); border-radius:9px;
-  width:34px; height:34px; display:grid; place-items:center; font-size:15px;
+  width:34px; height:34px; display:grid; place-items:center; font-size:calc(15px * var(--fz));
 }
 .icon-btn:hover{border-color:var(--accent);}
 
@@ -72,16 +89,16 @@ main{padding:18px; max-width:1500px; margin:0 auto;}
 .panel + .panel{margin-top:16px;}
 .toolbar{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:14px;}
 .toolbar .spacer{flex:1;}
-.section-title{font-weight:700; font-size:15px; margin:0 0 12px; display:flex; align-items:center; gap:8px;}
+.section-title{font-weight:700; font-size:calc(15px * var(--fz)); margin:0 0 12px; display:flex; align-items:center; gap:8px;}
 .section-title .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
 .muted{color:var(--muted);}
-.small{font-size:12.5px;}
-.hint{font-size:12.5px; color:var(--muted); line-height:1.7;}
+.small{font-size:calc(12.5px * var(--fz));}
+.hint{font-size:calc(12.5px * var(--fz)); color:var(--muted); line-height:1.7;}
 
 /* ---------- 控件 ---------- */
 .btn{
   border:1px solid var(--line); background:var(--panel2); color:var(--text);
-  padding:7px 13px; border-radius:9px; font-weight:600; font-size:13px; white-space:nowrap;
+  padding:7px 13px; border-radius:9px; font-weight:600; font-size:calc(13px * var(--fz)); white-space:nowrap;
   transition:.15s;
 }
 .btn:hover{border-color:var(--accent); color:var(--accent);}
@@ -89,20 +106,20 @@ main{padding:18px; max-width:1500px; margin:0 auto;}
 .btn.primary:hover{filter:brightness(1.08); color:#fff;}
 .btn.danger{color:var(--danger);}
 .btn.danger:hover{border-color:var(--danger); color:var(--danger); background:var(--panel2);}
-.btn.tiny{padding:4px 9px; font-size:12px; border-radius:7px;}
+.btn.tiny{padding:4px 9px; font-size:calc(12px * var(--fz)); border-radius:7px;}
 input[type=text],input[type=date],input[type=time],input[type=number],input[type=datetime-local],select,textarea{
   border:1px solid var(--line); background:var(--panel); border-radius:9px; padding:7px 10px;
   outline:none; transition:.15s; max-width:100%;
 }
 input:focus,select:focus,textarea:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent2);}
 textarea{resize:vertical; min-height:60px;}
-label.fld{display:flex; flex-direction:column; gap:5px; font-size:12.5px; color:var(--muted); font-weight:600;}
+label.fld{display:flex; flex-direction:column; gap:5px; font-size:calc(12.5px * var(--fz)); color:var(--muted); font-weight:600;}
 .row{display:flex; gap:10px; flex-wrap:wrap;}
 .row > *{flex:1 1 0; min-width:120px;}
 .chip-set{display:flex; flex-wrap:wrap; gap:8px;}
 .chip{
   border:1px solid var(--line); background:var(--panel); border-radius:999px;
-  padding:5px 13px; font-size:12.5px; font-weight:600; color:var(--muted);
+  padding:5px 13px; font-size:calc(12.5px * var(--fz)); font-weight:600; color:var(--muted);
 }
 .chip:hover{border-color:var(--accent); color:var(--accent);}
 .chip.active{background:var(--accent); border-color:var(--accent); color:#fff;}
@@ -119,17 +136,17 @@ label.fld{display:flex; flex-direction:column; gap:5px; font-size:12.5px; color:
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   padding:0; line-height:1.15; color:var(--muted); text-align:center;
 }
-.g-time b{font-size:11.5px; font-weight:600; color:var(--muted); letter-spacing:-.2px;}
-.g-time span{font-size:9.5px; opacity:.72; letter-spacing:-.2px;}
-.g-time .g-period{font-size:9px; opacity:.6; margin-bottom:1px;}
+.g-time b{font-size:calc(11.5px * var(--fz)); font-weight:600; color:var(--muted); letter-spacing:-.2px;}
+.g-time span{font-size:calc(9.5px * var(--fz)); opacity:.72; letter-spacing:-.2px;}
+.g-time .g-period{font-size:calc(9px * var(--fz)); opacity:.6; margin-bottom:1px;}
 /* 表头：星期 + 日期，今天高亮 */
 .g-day{
   background:var(--panel2); border-radius:10px; display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:1px; padding:6px 2px 5px;
   line-height:1.15; border:1px solid transparent;
 }
-.g-day .d-name{font-size:11.5px; font-weight:600; color:var(--muted);}
-.g-day .d-date{font-size:16px; font-weight:800; letter-spacing:-.5px;}
+.g-day .d-name{font-size:calc(11.5px * var(--fz)); font-weight:600; color:var(--muted);}
+.g-day .d-date{font-size:calc(16px * var(--fz)); font-weight:800; letter-spacing:-.5px;}
 .g-day.is-today{background:var(--accent); border-color:var(--accent); color:#fff;}
 .g-day.is-today .d-name{color:rgba(255,255,255,.86);}
 .g-day.is-weekend .d-date{color:var(--muted);}
@@ -154,15 +171,15 @@ html[data-theme="dark"] .course{
 }
 html[data-theme="dark"] .course:hover{background:color-mix(in srgb, var(--c) 42%, var(--panel));}
 .course .c-name{
-  font-weight:700; font-size:11.5px; line-height:1.25; word-break:break-all;
+  font-weight:700; font-size:calc(11.5px * var(--fz)); line-height:1.25; word-break:break-all;
   display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;
 }
 .course .c-loc{
-  font-size:9.5px; line-height:1.2; opacity:.82; word-break:break-all;
+  font-size:calc(9.5px * var(--fz)); line-height:1.2; opacity:.82; word-break:break-all;
   display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
 }
-.course .c-t{font-size:9.5px; line-height:1.2; opacity:.72; word-break:break-all;}
-.course .c-tip{font-size:9px; opacity:.7;}
+.course .c-t{font-size:calc(9.5px * var(--fz)); line-height:1.2; opacity:.72; word-break:break-all;}
+.course .c-tip{font-size:calc(9px * var(--fz)); opacity:.7;}
 
 /* ---------- 列表 ---------- */
 .list{display:flex; flex-direction:column; gap:8px;}
@@ -172,19 +189,19 @@ html[data-theme="dark"] .course:hover{background:color-mix(in srgb, var(--c) 42%
 }
 .item:hover{border-color:var(--accent);}
 .item .grow{flex:1; min-width:0;}
-.item .t1{font-weight:700; font-size:13.5px; word-break:break-all;}
-.item .t2{font-size:12px; color:var(--muted); margin-top:2px; word-break:break-all;}
+.item .t1{font-weight:700; font-size:calc(13.5px * var(--fz)); word-break:break-all;}
+.item .t2{font-size:calc(12px * var(--fz)); color:var(--muted); margin-top:2px; word-break:break-all;}
 .swatch{width:12px; height:12px; border-radius:4px; flex:0 0 auto;}
 .check{
   width:21px; height:21px; flex:0 0 auto; border-radius:7px; border:1.5px solid var(--line);
-  background:var(--panel); display:grid; place-items:center; font-size:12px; color:transparent;
+  background:var(--panel); display:grid; place-items:center; font-size:calc(12px * var(--fz)); color:transparent;
   padding:0;
 }
 .check:hover{border-color:var(--accent);}
 .check.on{background:var(--ok); border-color:var(--ok); color:#fff;}
 .item.done .t1{text-decoration:line-through; color:var(--muted);}
 .item.overdue .t2{color:var(--danger); font-weight:600;}
-.tag{font-size:11px; padding:2px 8px; border-radius:999px; font-weight:700; white-space:nowrap;}
+.tag{font-size:calc(11px * var(--fz)); padding:2px 8px; border-radius:999px; font-weight:700; white-space:nowrap;}
 .p-high{background:rgba(229,72,77,.15); color:var(--danger);}
 .p-normal{background:rgba(59,109,246,.15); color:var(--accent);}
 .p-low{background:rgba(106,122,144,.15); color:var(--muted);}
@@ -200,8 +217,8 @@ html[data-theme="dark"] .course:hover{background:color-mix(in srgb, var(--c) 42%
 .quick-form select{flex:0 1 92px;}
 
 .timer{text-align:center; padding:6px 0 2px;}
-.timer .t-time{font-size:44px; font-weight:800; letter-spacing:2px; font-variant-numeric:tabular-nums; line-height:1.1;}
-.timer .t-label{font-size:12.5px; color:var(--muted); margin-top:2px;}
+.timer .t-time{font-size:calc(44px * var(--fz)); font-weight:800; letter-spacing:2px; font-variant-numeric:tabular-nums; line-height:1.1;}
+.timer .t-label{font-size:calc(12.5px * var(--fz)); color:var(--muted); margin-top:2px;}
 .timer .t-btns{display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap;}
 .timer.focus .t-time{color:var(--accent);}
 .timer.brk .t-time{color:var(--ok);}
@@ -209,25 +226,25 @@ html[data-theme="dark"] .course:hover{background:color-mix(in srgb, var(--c) 42%
 /* ---------- 统计 ---------- */
 .stat-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;}
 .stat{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:13px 15px;}
-.stat .v{font-size:25px; font-weight:800; line-height:1.2;}
-.stat .k{font-size:12.5px; color:var(--muted); margin-top:2px;}
+.stat .v{font-size:calc(25px * var(--fz)); font-weight:800; line-height:1.2;}
+.stat .k{font-size:calc(12.5px * var(--fz)); color:var(--muted); margin-top:2px;}
 .bars{display:flex; align-items:flex-end; gap:10px; height:150px; padding:8px 4px 0;}
 .bar-col{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; height:100%;}
 .bar{width:100%; max-width:52px; background:var(--accent); border-radius:7px 7px 3px 3px; min-height:3px; transition:.3s;}
 .bar.today{background:var(--ok);}
-.bar-lb{font-size:11.5px; color:var(--muted);}
-.bar-v{font-size:11.5px; font-weight:700;}
+.bar-lb{font-size:calc(11.5px * var(--fz)); color:var(--muted);}
+.bar-v{font-size:calc(11.5px * var(--fz)); font-weight:700;}
 .hbar-row{display:flex; align-items:center; gap:10px; margin-bottom:9px;}
-.hbar-row .nm{width:150px; font-size:12.5px; font-weight:600; flex:0 0 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.hbar-row .nm{width:150px; font-size:calc(12.5px * var(--fz)); font-weight:600; flex:0 0 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .hbar-track{flex:1; height:16px; background:var(--panel2); border-radius:8px; overflow:hidden; border:1px solid var(--line);}
 .hbar{height:100%; border-radius:8px; transition:.3s;}
-.hbar-row .vv{font-size:12px; color:var(--muted); width:66px; text-align:right; flex:0 0 auto;}
+.hbar-row .vv{font-size:calc(12px * var(--fz)); color:var(--muted); width:66px; text-align:right; flex:0 0 auto;}
 
 /* ---------- 设置 ---------- */
 .set-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px;}
-table.times{width:100%; border-collapse:collapse; font-size:13px;}
+table.times{width:100%; border-collapse:collapse; font-size:calc(13px * var(--fz));}
 table.times th,table.times td{padding:5px 6px; border-bottom:1px solid var(--line); text-align:left;}
-table.times th{font-size:12px; color:var(--muted); font-weight:600;}
+table.times th{font-size:calc(12px * var(--fz)); color:var(--muted); font-weight:600;}
 table.times input[type=time]{padding:4px 8px; width:120px;}
 
 /* ---------- 弹窗 / toast ---------- */
@@ -241,8 +258,8 @@ table.times input[type=time]{padding:4px 8px; width:120px;}
   animation:pop .16s ease-out;
 }
 @keyframes pop{from{transform:scale(.97); opacity:.4} to{transform:scale(1); opacity:1}}
-.modal h3{margin:0 0 4px; font-size:16px;}
-.modal .sub{margin:0 0 16px; font-size:12.5px; color:var(--muted);}
+.modal h3{margin:0 0 4px; font-size:calc(16px * var(--fz));}
+.modal .sub{margin:0 0 16px; font-size:calc(12.5px * var(--fz)); color:var(--muted);}
 .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
 .form-grid .full{grid-column:1 / -1;}
 @media (max-width:560px){ .form-grid{grid-template-columns:1fr;} }
@@ -258,61 +275,61 @@ table.times input[type=time]{padding:4px 8px; width:120px;}
 }
 .wc:hover{border-color:var(--accent); transform:translateY(-2px);}
 .wc b{display:block; margin-bottom:5px;}
-.wc span{font-size:12.5px; color:var(--muted);}
+.wc span{font-size:calc(12.5px * var(--fz)); color:var(--muted);}
 #toastRoot{position:fixed; right:18px; bottom:18px; z-index:120; display:flex; flex-direction:column; gap:8px;}
 .toast{
-  background:var(--text); color:var(--panel); padding:10px 15px; border-radius:11px; font-size:13px;
+  background:var(--text); color:var(--panel); padding:10px 15px; border-radius:11px; font-size:calc(13px * var(--fz));
   box-shadow:0 10px 30px rgba(0,0,0,.28); animation:pop .16s ease-out; max-width:320px;
 }
 .warnbar{
   background:rgba(217,148,0,.13); border:1px solid rgba(217,148,0,.4); color:var(--warn);
-  padding:9px 13px; border-radius:10px; font-size:12.5px; margin-bottom:12px;
+  padding:9px 13px; border-radius:10px; font-size:calc(12.5px * var(--fz)); margin-bottom:12px;
 }
-.empty{text-align:center; color:var(--muted); padding:26px 10px; font-size:13px;}
+.empty{text-align:center; color:var(--muted); padding:26px 10px; font-size:calc(13px * var(--fz));}
 
 /* ---------- 导入 ---------- */
 .modal.wide{max-width:860px;}
 .imp-area{
   width:100%; min-height:150px; font-family:ui-monospace,Consolas,"Courier New",monospace;
-  font-size:12.5px; white-space:pre; overflow:auto; margin-top:6px;
+  font-size:calc(12.5px * var(--fz)); white-space:pre; overflow:auto; margin-top:6px;
 }
 .imp-tip{
   background:var(--panel2); border:1px solid var(--line); border-radius:10px;
-  padding:10px 13px; font-size:12.5px; color:var(--muted); line-height:1.8;
+  padding:10px 13px; font-size:calc(12.5px * var(--fz)); color:var(--muted); line-height:1.8;
 }
 .imp-tip b{color:var(--text);}
 .imp-steps{margin:0; padding-left:20px;}
 .imp-wrap{max-height:42vh; overflow:auto; border:1px solid var(--line); border-radius:10px;}
-.imp-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+.imp-table{width:100%; border-collapse:collapse; font-size:calc(12.5px * var(--fz));}
 .imp-table th,.imp-table td{padding:6px 8px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap;}
-.imp-table th{font-size:11.5px; color:var(--muted); font-weight:700; position:sticky; top:0; background:var(--panel); z-index:1;}
+.imp-table th{font-size:calc(11.5px * var(--fz)); color:var(--muted); font-weight:700; position:sticky; top:0; background:var(--panel); z-index:1;}
 .imp-table td.nm{font-weight:700; white-space:normal; min-width:150px;}
 .imp-table td.lb{color:var(--muted);}
 .imp-table tr.conflict td{background:rgba(229,72,77,.10);}
 .imp-table tr.off{opacity:.4;}
 .imp-table tr.skip td{color:var(--muted); text-decoration:line-through;}
-.imp-stat{display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin:12px 0 0; font-size:12.5px;}
+.imp-stat{display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin:12px 0 0; font-size:calc(12.5px * var(--fz));}
 .imp-stat .pill{background:var(--panel2); border:1px solid var(--line); border-radius:999px; padding:4px 12px; font-weight:600;}
 .imp-stat .pill.warn{color:var(--warn); border-color:rgba(217,148,0,.45);}
 
 /* ---------- 课表页顶部信息 ---------- */
 .weekhead{display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin-bottom:8px;}
-.weekhead .wh-week{font-size:21px; font-weight:800; letter-spacing:-.6px; line-height:1.15;}
-.weekhead .wh-day{font-size:12px; color:var(--muted); margin-top:2px;}
+.weekhead .wh-week{font-size:calc(21px * var(--fz)); font-weight:800; letter-spacing:-.6px; line-height:1.15;}
+.weekhead .wh-day{font-size:calc(12px * var(--fz)); color:var(--muted); margin-top:2px;}
 @media (max-width:760px){
-  .weekhead .wh-week{font-size:18px;}
-  .weekhead .wh-day{font-size:11.5px;}
+  .weekhead .wh-week{font-size:calc(18px * var(--fz));}
+  .weekhead .wh-day{font-size:calc(11.5px * var(--fz));}
 }
 
 /* ---------- 手机上：单日视图 ---------- */
 .tab .ti{display:none; font-style:normal;}
 .daybar{display:flex; gap:6px; overflow-x:auto; padding:2px 0 10px; -webkit-overflow-scrolling:touch;}
 .daychip{
-  flex:0 0 auto; min-width:54px; text-align:center; padding:7px 9px; border-radius:11px;
-  border:1px solid var(--line); background:var(--panel2); font-size:12.5px; font-weight:700;
+  flex:0 0 auto; min-width:calc(54px * var(--fz)); text-align:center; padding:7px 9px; border-radius:11px;
+  border:1px solid var(--line); background:var(--panel2); font-size:calc(12.5px * var(--fz)); font-weight:700;
   color:var(--muted); line-height:1.3;
 }
-.daychip .dc-date{display:block; font-size:10.5px; font-weight:600; opacity:.85;}
+.daychip .dc-date{display:block; font-size:calc(10.5px * var(--fz)); font-weight:600; opacity:.85;}
 .daychip.today{border-color:var(--accent); color:var(--accent);}
 .daychip.active{background:var(--accent); border-color:var(--accent); color:#fff;}
 .dlist{display:flex; flex-direction:column; gap:9px;}
@@ -322,15 +339,15 @@ table.times input[type=time]{padding:4px 8px; width:120px;}
   background:color-mix(in srgb, var(--c) 12%, var(--panel));
 }
 html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(--panel));}
-.dcard .dt{flex:0 0 64px; font-size:11.5px; font-weight:700; color:var(--muted); line-height:1.4;}
-.dcard .dt b{display:block; color:var(--text); font-size:13px;}
+.dcard .dt{flex:0 0 64px; font-size:calc(11.5px * var(--fz)); font-weight:700; color:var(--muted); line-height:1.4;}
+.dcard .dt b{display:block; color:var(--text); font-size:calc(13px * var(--fz));}
 .dcard .db{flex:1; min-width:0;}
-.dcard .dn{font-weight:700; font-size:15px; line-height:1.3; word-break:break-all;}
-.dcard .dm{font-size:12.5px; color:var(--muted); margin-top:3px; word-break:break-all;}
-.dcard .dgo{color:var(--muted); align-self:center; font-size:15px;}
+.dcard .dn{font-weight:700; font-size:calc(15px * var(--fz)); line-height:1.3; word-break:break-all;}
+.dcard .dm{font-size:calc(12.5px * var(--fz)); color:var(--muted); margin-top:3px; word-break:break-all;}
+.dcard .dgo{color:var(--muted); align-self:center; font-size:calc(15px * var(--fz));}
 .dayrow{display:flex; align-items:flex-start; gap:10px; padding:9px 4px; border-bottom:1px solid var(--line); cursor:pointer;}
 .dayrow:last-child{border-bottom:0;}
-.dayrow .dw{flex:0 0 46px; font-weight:700; font-size:13px;}
+.dayrow .dw{flex:0 0 46px; font-weight:700; font-size:calc(13px * var(--fz));}
 .dayrow.is-today .dw{color:var(--accent);}
 
 /* 触摸设备上关掉 hover 造成的“粘住”效果 */
@@ -356,8 +373,8 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
   .panel{padding:13px;}
   .panel + .panel{margin-top:10px;}
   .topbar{padding:8px 12px; gap:10px;}
-  .brand{font-size:14.5px;}
-  .badge{font-size:12px; padding:4px 10px;}
+  .brand{font-size:calc(14.5px * var(--fz));}
+  .badge{font-size:calc(12px * var(--fz)); padding:4px 10px;}
   .icon-btn{width:36px; height:36px;}
 
   /* 四个 Tab 挪到底部，方便单手点 */
@@ -369,16 +386,16 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
   }
   .tab{
     flex:1; display:flex; flex-direction:column; align-items:center; gap:1px;
-    padding:5px 2px; border-radius:10px; font-size:11px; font-weight:600;
+    padding:5px 2px; border-radius:10px; font-size:calc(11px * var(--fz)); font-weight:600;
   }
-  .tab .ti{display:block; font-size:18px; line-height:1.1;}
+  .tab .ti{display:block; font-size:calc(18px * var(--fz)); line-height:1.1;}
   .tab.active{background:transparent; color:var(--accent);}
 
   /* 控件放大到能点得准；输入框 16px 可避免 iOS 聚焦时自动放大页面 */
-  .btn{padding:9px 14px; font-size:14px;}
-  .btn.tiny{padding:6px 11px; font-size:12.5px;}
+  .btn{padding:9px 14px; font-size:calc(14px * var(--fz));}
+  .btn.tiny{padding:6px 11px; font-size:calc(12.5px * var(--fz));}
   input[type=text],input[type=date],input[type=time],input[type=number],
-  input[type=datetime-local],select,textarea{font-size:16px; padding:8px 10px;}
+  input[type=datetime-local],select,textarea{font-size:calc(16px * var(--fz)); padding:8px 10px;}
   .toolbar{gap:8px;}
 
   /* 弹窗改成底部抽屉，按钮拉通排 */
@@ -392,28 +409,28 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
   .modal-foot .btn.danger{flex:0 0 auto;}
 
   /* 手机上整周表格铺满一屏：时间轴收窄，字号调小 */
-  :root{ --taxis:38px; }
+  :root{ --taxis:calc(38px * var(--fz)); --rowh:calc(42px * var(--fz)); }
   .grid{gap:2px; min-height:52vh;}
-  .g-time b{font-size:9.5px;}
-  .g-time span{font-size:8px;}
+  .g-time b{font-size:calc(9.5px * var(--fz));}
+  .g-time span{font-size:calc(8px * var(--fz));}
   .g-time .g-period{display:none;}
   .g-day{padding:4px 1px; border-radius:8px;}
-  .g-day .d-name{font-size:10px;}
-  .g-day .d-date{font-size:14px;}
+  .g-day .d-name{font-size:calc(10px * var(--fz));}
+  .g-day .d-date{font-size:calc(14px * var(--fz));}
   .course{padding:4px 5px; border-radius:8px;}
-  .course .c-name{font-size:10.5px; -webkit-line-clamp:5;}
-  .course .c-loc{font-size:8.5px; -webkit-line-clamp:3;}
-  .course .c-t{font-size:8.5px;}
+  .course .c-name{font-size:calc(10.5px * var(--fz)); -webkit-line-clamp:5;}
+  .course .c-loc{font-size:calc(8.5px * var(--fz)); -webkit-line-clamp:3;}
+  .course .c-t{font-size:calc(8.5px * var(--fz));}
   .course .c-tip{display:none;}
 
   /* 统计 / 规划页的细节 */
   .hbar-row{flex-wrap:wrap;}
   .hbar-row .nm{width:100%;}
   .hbar-row .vv{width:auto; margin-left:auto;}
-  .stat .v{font-size:21px;}
-  .timer .t-time{font-size:38px;}
+  .stat .v{font-size:calc(21px * var(--fz));}
+  .timer .t-time{font-size:calc(38px * var(--fz));}
   .quick-form > *{flex:1 1 100%;}
-  .imp-table th,.imp-table td{padding:5px 6px; font-size:12px;}
+  .imp-table th,.imp-table td{padding:5px 6px; font-size:calc(12px * var(--fz));}
   .welcome-choice{gap:10px;}
 }
 
@@ -591,7 +608,8 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
         periods: defaultTimes(n),
         focusMin: 25,
         breakMin: 5,
-        theme: 'auto'
+        theme: 'auto',
+        fontScale: 'm'
       },
       courses: [],
       tasks: [],
@@ -617,6 +635,7 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
     d.settings.focusMin = clampInt(st.focusMin, 1, 180, 25);
     d.settings.breakMin = clampInt(st.breakMin, 1, 60, 5);
     d.settings.theme = (st.theme === 'light' || st.theme === 'dark') ? st.theme : 'auto';
+    d.settings.fontScale = ['s', 'm', 'l', 'xl'].indexOf(st.fontScale) >= 0 ? st.fontScale : 'm';
 
     d.courses = (Array.isArray(s.courses) ? s.courses : []).map(function (c) {
       return {
@@ -704,6 +723,14 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
     var cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
     state.settings.theme = cur === 'dark' ? 'light' : 'dark';
     save(); applyTheme(); render();
+  }
+  /* 字号档位：小 / 标准 / 大 / 特大，靠 --fz 整体缩放 */
+  function applyFontScale() {
+    var v = state.settings.fontScale;
+    if (['s', 'm', 'l', 'xl'].indexOf(v) < 0) { v = 'm'; }
+    try {
+      document.documentElement.setAttribute('data-fs', v);
+    } catch (e) { /* 忽略 */ }
   }
   if (darkQuery) {
     var onScheme = function () { if (state && state.settings.theme === 'auto') { applyTheme(); } };
@@ -2315,7 +2342,7 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
       h += '<div class="warnbar">本周有 ' + conflicts.length + ' 门课程时间重叠，未能显示：' + names + '。请编辑课程时间或周次。</div>';
     }
 
-    h += '<div class="grid-wrap"><div class="grid" style="grid-template-columns:var(--taxis) repeat(7,minmax(0,1fr));grid-template-rows:auto repeat(' + n + ',minmax(42px,1fr));">';
+    h += '<div class="grid-wrap"><div class="grid" style="grid-template-columns:var(--taxis) repeat(7,minmax(0,1fr));grid-template-rows:auto repeat(' + n + ',minmax(var(--rowh),1fr));">';
     h += '<div class="g-corner" style="grid-column:1;grid-row:1;"></div>';
 
     for (var d = 1; d <= 7; d++) {
@@ -2668,6 +2695,12 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
          '<option value="light"' + (st.theme === 'light' ? ' selected' : '') + '>浅色</option>' +
          '<option value="dark"' + (st.theme === 'dark' ? ' selected' : '') + '>深色</option>' +
          '</select></label>';
+    h += '<label class="fld">字号<select name="fontScale" data-field="fontScale">' +
+         '<option value="s"' + (st.fontScale === 's' ? ' selected' : '') + '>小</option>' +
+         '<option value="m"' + (st.fontScale === 'm' ? ' selected' : '') + '>标准</option>' +
+         '<option value="l"' + (st.fontScale === 'l' ? ' selected' : '') + '>大</option>' +
+         '<option value="xl"' + (st.fontScale === 'xl' ? ' selected' : '') + '>特大</option>' +
+         '</select></label>';
     h += '<label class="fld">专注时长（分钟）<input type="number" name="focusMin" min="1" max="180" value="' + st.focusMin + '" /></label>';
     h += '<label class="fld">休息时长（分钟）<input type="number" name="breakMin" min="1" max="60" value="' + st.breakMin + '" /></label>';
     h += '</div>';
@@ -2738,6 +2771,7 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
      渲染入口
      ======================================================= */
   function render() {
+    applyFontScale();
     var main = qs('#main');
     if (state.ui.tab === 'schedule') { main.innerHTML = viewSchedule(); }
     else if (state.ui.tab === 'tasks') { main.innerHTML = viewTasks(); }
@@ -3029,6 +3063,8 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
     state.settings.breakMin = clampInt(fd.get('breakMin'), 1, 60, 5);
     var th = String(fd.get('theme') || 'auto');
     state.settings.theme = (th === 'light' || th === 'dark') ? th : 'auto';
+    var fs = String(fd.get('fontScale') || 'm');
+    state.settings.fontScale = ['s', 'm', 'l', 'xl'].indexOf(fs) >= 0 ? fs : 'm';
 
     // 节次被裁掉时把课程时间收进范围内
     for (var ci = 0; ci < state.courses.length; ci++) {
@@ -3481,6 +3517,13 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
     if (field === 'taskSort') {
       state.ui.taskSort = el.value; save(); render(); return;
     }
+    /* 字号改成即时生效，方便边看边调 */
+    if (field === 'fontScale') {
+      var fv = String(el.value || 'm');
+      state.settings.fontScale = ['s', 'm', 'l', 'xl'].indexOf(fv) >= 0 ? fv : 'm';
+      applyFontScale(); save();
+      return;
+    }
     if (field === 'periodsPerDay') {
       var form = el.closest('form');
       var n = clampInt(el.value, 4, 16, state.settings.periodsPerDay);
@@ -3520,6 +3563,11 @@ html[data-theme="dark"] .dcard{background:color-mix(in srgb, var(--c) 22%, var(-
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { closeModal(); }
+  });
+
+  /* iOS Safari 不认 user-scalable=no，只能靠拦手势事件（安卓上这两个事件不会触发，无副作用） */
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { e.preventDefault(); }, { passive: false });
   });
 
   window.addEventListener('beforeunload', function () {
